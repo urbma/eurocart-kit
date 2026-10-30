@@ -4,77 +4,44 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EuroCart</title>
+  <link rel="stylesheet" href="/te.css">
   <style>
-    /* Colours of the Java logo: the blue of the cup and steam, the orange and red of the flame. */
-    :root {
-      --java-blue: #5382A1;
-      --java-blue-dark: #3E6482;
-      --java-blue-light: #EAF1F6;
-      --java-orange: #F89820;
-      --java-red: #E76F00;
-      --ink: #1F2D3A;
-    }
-    body { font-family: system-ui, sans-serif; margin: 0; background: #fff; color: var(--ink); line-height: 1.45; }
-    header, main { max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
-    /* The header background runs the full width of the window while its content stays in the column. */
-    header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem;
-      padding-block: 1.25rem; background: var(--java-blue-light); box-shadow: 0 0 0 100vmax var(--java-blue-light);
-      clip-path: inset(0 -100vmax); border-bottom: 2px solid var(--java-blue); }
-    h1 { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--java-blue-dark); }
-    header .muted { color: var(--java-blue-dark); font-size: .85rem; }
-    h1 span { color: var(--java-orange); }
     /* Categories on the left, products in the centre, the cart on the right and in view while scrolling. */
-    main { display: grid; grid-template-columns: 11rem minmax(0, 1fr) 21rem; gap: 2.5rem; padding-block: 1.5rem; align-items: start; }
-    #cart { position: sticky; top: 1rem; padding: 1rem; border: 1px solid #E4EAF0; border-radius: 8px; }
+    main { display: grid; grid-template-columns: 11rem minmax(0, 1fr) 21rem; gap: 1rem; align-items: start; }
+    main > nav, main > section { padding: 1rem; border: 1px solid var(--ink); background: var(--panel); }
+    #cart { position: sticky; top: 1rem; }
+    /* Without the category list (it is hidden on the landing page) the products take its column. */
+    @media (min-width: 961px) { main:has(#categories[hidden]) { grid-template-columns: minmax(0, 1fr) 21rem; } }
     @media (max-width: 960px) {
-      main { grid-template-columns: 1fr; gap: 1.5rem; }
+      main { grid-template-columns: minmax(0, 1fr); }
       #cart { position: static; }
       #categories ul { display: flex; flex-wrap: wrap; gap: .4rem; }
+      #categories button { width: auto; border: 1px solid var(--ink); }
     }
-    #categories ul { list-style: none; margin: .5rem 0 0; padding: 0; }
-    #categories button { display: block; width: 100%; text-align: left; padding: .35rem .6rem; color: var(--ink); }
-    #categories button[aria-pressed="true"] { background: var(--java-blue); color: #fff; font-weight: 600; }
-    @media (max-width: 960px) { #categories button { width: auto; border: 1px solid #CBD6E0; } }
-    details.vat summary { cursor: pointer; font-size: .8rem; color: var(--java-blue); }
-    details.vat summary:hover { color: var(--java-blue-dark); }
-    details.vat table { margin-top: .4rem; font-size: .8rem; color: #4A5A68; }
-    details.vat th { font-weight: 600; text-align: right; padding: .15rem 0 .15rem .75rem; border-bottom: 1px solid #E4EAF0; }
-    details.vat th:first-child { text-align: left; padding-left: 0; }
+    /* The categories are numbered like the channels of a device. */
+    #categories ul { margin: .5rem 0 0; padding: 0; list-style: none; counter-reset: category; }
+    #categories li { counter-increment: category; }
+    #categories button { display: flex; gap: .6rem; width: 100%; padding: .45rem .3rem; border: 0; border-bottom: 1px solid var(--line);
+      background: none; text-align: left; }
+    #categories button::before { content: counter(category, decimal-leading-zero); color: var(--grey); }
+    #categories button:hover { background: var(--ink); color: #fff; }
+    #categories button:hover::before { color: var(--orange); }
+    #categories button[aria-pressed="true"] { background: var(--orange); color: var(--ink); }
+    #categories button[aria-pressed="true"]::before { color: var(--ink); }
+    details.vat summary { cursor: pointer; font: 600 .66rem var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--grey); }
+    details.vat summary:hover { color: var(--ink); }
+    details.vat table { margin-top: .4rem; font: .75rem var(--mono); color: var(--grey); }
+    details.vat th { padding: .15rem 0 .15rem .75rem; text-align: right; }
+    details.vat th:first-child { padding-left: 0; text-align: left; }
     details.vat td { padding: .15rem 0; border-bottom: 0; }
     details.vat td + td { padding-left: .75rem; }
-    details.vat tr.sum td { border-top: 1px solid #E4EAF0; font-weight: 600; }
-    h2 { margin: 0 0 .25rem; font-size: 1rem; font-weight: 600; }
-    h3 { margin: 1.5rem 0 .25rem; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--java-blue); }
-    table { width: 100%; border-collapse: collapse; }
-    td { padding: .45rem 0; border-bottom: 1px solid #F0F3F6; vertical-align: baseline; }
-    td + td { padding-left: .75rem; }
-    td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-    td.action { width: 1%; text-align: right; }
-    button { cursor: pointer; font: inherit; border: 0; background: none; color: var(--java-blue); padding: .1rem .35rem; border-radius: 4px; }
-    button:hover { background: var(--java-blue-light); color: var(--java-blue-dark); }
-    #products button { border: 1px solid var(--java-blue); color: var(--java-blue-dark); font-weight: 600; padding: .15rem .6rem; }
-    #products button:hover { background: var(--java-blue); color: #fff; }
-    button.primary { width: 100%; margin-top: 1rem; padding: .6rem; background: var(--java-orange); color: var(--ink); font-weight: 600; }
-    button.primary:hover { background: var(--java-red); color: #fff; }
-    .summary td { border: 0; padding: .2rem 0; }
-    .summary .total td { padding-top: .6rem; border-top: 1px solid #E4EAF0; font-weight: 600; font-size: 1.1rem; }
-    .muted { color: #6B7B88; font-size: .8rem; }
-    #error { color: #B00020; }
-    #error:empty, #payment-status:empty { display: none; }
-    #payment-status { color: var(--java-blue-dark); }
-    form { margin-top: 1.5rem; }
-    fieldset { border: 0; margin: 0 0 1rem; padding: 0; }
-    legend { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--java-blue); padding: 0; }
-    label { display: block; margin: .5rem 0 0; font-size: .8rem; color: #4A5A68; }
-    input, select { width: 100%; box-sizing: border-box; padding: .4rem .5rem; border: 1px solid #CBD6E0; border-radius: 4px; font: inherit; }
-    label.terms { display: flex; align-items: flex-start; gap: .5rem; margin-top: 1rem; font-size: .85rem; color: var(--ink); }
-    label.terms input { width: auto; margin-top: .2rem; flex: none; }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    input:focus, select:focus { outline: 2px solid var(--java-orange); outline-offset: 0; border-color: transparent; }
+    details.vat tr.sum td { border-top: 1px solid var(--line); font-weight: 700; color: var(--ink); }
     .row { display: grid; grid-template-columns: 2fr 1fr; gap: .5rem; }
-    [hidden] { display: none !important; }
-    .flag { display: block; cursor: default; }
-    .flag svg { display: block; height: 1.75rem; width: auto; border-radius: 3px; box-shadow: 0 0 0 1px rgba(31,45,58,.2); }
+    label.terms { display: flex; align-items: flex-start; gap: .6rem; margin-top: 1rem; font: .85rem var(--sans);
+      text-transform: none; letter-spacing: 0; color: var(--ink); }
+    label.terms input { flex: none; width: auto; margin: .15rem 0 0; }
+    #payment-status { padding-left: .6rem; border-left: 3px solid var(--orange); }
+    #payment-status:empty { display: none; }
   </style>
 </head>
 <body>
@@ -83,7 +50,7 @@
     <span id="flag" class="flag" role="img"></span>
   </header>
   <main>
-    <nav id="categories" aria-label="Categories">
+    <nav id="categories" aria-label="Categories" hidden>
       <h2>Categories</h2>
       <ul></ul>
     </nav>
@@ -378,6 +345,13 @@
     let products = [];
     let storefronts = [];
 
+    // Landing page: only the most expensive e-book is shown. The rest stays in the catalogue and the API; if there
+    // were no e-books at all, the whole catalogue is shown so the shop is never empty. The category list is hidden.
+    function landingProducts(all) {
+      const ebooks = all.filter(p => p.category === 'EBOOK');
+      return ebooks.length ? [ebooks.reduce((best, p) => p.price > best.price ? p : best)] : all;
+    }
+
     async function showStorefront(country) {
       useStorefront(storefronts.find(s => s.country === country) || storefronts.find(s => s.country === DEFAULT_COUNTRY));
       const label = STOREFRONT_LABELS[storefront.country];
@@ -391,9 +365,8 @@
 
     Promise.all([api('/api/products'), api('/api/pricing/storefronts')])
       .then(async ([allProducts, allStorefronts]) => {
-        products = allProducts;
+        products = landingProducts(allProducts);
         storefronts = allStorefronts;
-        renderCategories(products);
         const country = forcedCountry || (await api('/api/geo/country')).country;
         return showStorefront(country);
       });

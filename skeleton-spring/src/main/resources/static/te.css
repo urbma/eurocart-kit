@@ -1,0 +1,87 @@
+/*
+ * Teenage Engineering look and feel, shared by all EuroCart pages: flat and utilitarian like a piece of hardware.
+ * Off-white panels, black hairlines, square corners, small monospace labels in capitals, one signal orange.
+ * No web fonts and no images: it only uses the fonts of the visitor's system.
+ */
+:root {
+  --bg: #EDEDEA;
+  --panel: #F8F8F6;
+  --ink: #111;
+  --grey: #6E6E69;
+  --line: #CFCFC9;
+  --orange: #FF5B00;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --page-width: 1280px;
+}
+
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); }
+a { color: inherit; text-decoration-color: var(--orange); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* The black header runs the full width of the window while its content stays in the column. */
+header, main { max-width: var(--page-width); margin: 0 auto; padding: 0 1rem; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem;
+  padding-block: 1rem; background: var(--ink); color: #fff; box-shadow: 0 0 0 100vmax var(--ink); clip-path: inset(0 -100vmax); }
+header a { font: 600 .7rem var(--mono); text-transform: uppercase; letter-spacing: .12em; text-decoration: none;
+  border-bottom: 2px solid var(--orange); }
+main { padding-block: 1.5rem; }
+
+h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -.03em; text-transform: lowercase; }
+h1 span { color: var(--orange); }
+h1 small { margin-left: .75rem; font: 400 .7rem var(--mono); text-transform: uppercase; letter-spacing: .14em; color: #B5B5B0; }
+h2 { margin: 0 0 .5rem; font: 700 .72rem var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+/* A small orange square in front of a heading: the indicator light of the panel. */
+h2::before { content: ""; display: inline-block; width: .6em; height: .6em; margin-right: .6em; background: var(--orange); }
+h3 { margin: 1.5rem 0 .4rem; padding-top: .5rem; border-top: 1px solid var(--ink);
+  font: 600 .68rem var(--mono); text-transform: uppercase; letter-spacing: .12em; color: var(--grey); }
+
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: .45rem 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--line); }
+td + td, th + th { padding-left: .75rem; }
+th { font: 600 .66rem var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--grey); border-bottom: 1px solid var(--ink); }
+td.num, th.num { text-align: right; white-space: nowrap; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.action { width: 1%; text-align: right; }
+
+.muted { color: var(--grey); font-size: .78rem; }
+#error { color: #D00000; font: .8rem var(--mono); }
+#error:empty { display: none; }
+
+button { cursor: pointer; padding: .3rem .65rem; border: 1px solid var(--ink); border-radius: 0; background: #fff; color: var(--ink);
+  font: 600 .7rem var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+button:hover { background: var(--ink); color: #fff; }
+button:active { transform: translateY(1px); }
+button.primary { display: block; width: 100%; margin-top: 1rem; padding: .85rem; background: var(--orange); font-size: .78rem; }
+button.primary:hover { background: var(--ink); color: var(--orange); }
+button:disabled, button:disabled:hover { cursor: not-allowed; transform: none; border-color: var(--grey); background: var(--line); color: var(--grey); }
+a.button { display: inline-block; margin-top: 2rem; padding: .8rem 1.4rem; border: 1px solid var(--ink); background: var(--orange);
+  color: var(--ink); font: 600 .78rem var(--mono); text-transform: uppercase; letter-spacing: .08em; text-decoration: none; }
+a.button:hover { background: var(--ink); color: var(--orange); }
+
+form { margin-top: 1.5rem; }
+fieldset { margin: 0 0 1rem; padding: 0; border: 0; }
+legend { width: 100%; padding: 0 0 .3rem; border-bottom: 1px solid var(--ink); font: 700 .68rem var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+label { display: block; margin: .6rem 0 0; font: .66rem var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--grey); }
+input, select { display: block; width: 100%; box-sizing: border-box; margin-top: .2rem; padding: .5rem .6rem; border: 1px solid var(--ink);
+  border-radius: 0; background: #fff; color: var(--ink); font: .9rem var(--mono); text-transform: none; letter-spacing: 0; }
+input:focus, select:focus { outline: 2px solid var(--orange); outline-offset: 0; }
+input[type="checkbox"] { accent-color: var(--orange); }
+
+/* The total reads like the display of a device: orange digits on black. */
+.summary td { padding: .25rem 0; border: 0; }
+.summary .total td { padding-top: .7rem; border-top: 1px solid var(--ink); font: 700 .75rem var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+.summary .total td.num { padding: .45rem .7rem; background: var(--ink); color: var(--orange); font-size: 1.15rem; letter-spacing: 0; }
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1.5rem; margin: 0; }
+dt { padding-top: .15rem; font: .66rem var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--grey); }
+dd { margin: 0; }
+address { font-style: normal; }
+
+.status { display: inline-block; padding: .05rem .5rem; border: 1px solid var(--ink); background: #fff;
+  font: 700 .66rem var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+.PAID { background: var(--orange); }
+.PENDING { border-style: dashed; }
+
+.flag { display: block; cursor: default; }
+.flag svg { display: block; height: 1.5rem; width: auto; box-shadow: 0 0 0 1px #fff; }

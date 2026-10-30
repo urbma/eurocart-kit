@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>De Ontdekking van de Hemel – E-book | EuroCart</title>
+  <meta name="description" content="De Ontdekking van de Hemel by Harry Mulisch, as an e-book. Order in one step, no shipping.">
+  <link rel="stylesheet" href="/te.css">
+  <style>
+    /* Landing page for one e-book: a huge title, a big cover on a block of signal orange and a buy form that needs
+       only an email address. Everything is flat and square, like the rest of the shop. */
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(1.5rem, 4vw, 4rem);
+      align-items: center; padding-block: clamp(1.5rem, 4vw, 3.5rem); }
+    .kicker { display: flex; align-items: center; gap: .6rem; font: 600 .72rem var(--mono); text-transform: uppercase; letter-spacing: .16em; }
+    .kicker::before { content: ""; width: .7em; height: .7em; background: var(--orange); }
+    h2.title { margin: .75rem 0 1rem; font: 800 clamp(2.6rem, 6.4vw, 5.8rem)/.92 var(--sans); letter-spacing: -.045em; text-transform: none; }
+    h2.title::before { display: none; }
+    .author { margin: 0; font: 600 .95rem var(--mono); text-transform: uppercase; letter-spacing: .14em; color: var(--grey); }
+
+    /* The selling points in a banner across the whole width, directly under the header. */
+    .banner { padding: 1rem; background: var(--orange); border-bottom: 1px solid var(--ink); color: var(--ink); text-align: center;
+      font: 700 clamp(.85rem, 2.2vw, 1.15rem) var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+
+    .cover-block { display: grid; place-items: center; padding: clamp(1.75rem, 5vw, 3.5rem); background: var(--orange); border: 1px solid var(--ink); }
+    .cover { display: block; width: min(100%, 360px); height: auto; aspect-ratio: 2 / 3; box-shadow: 14px 14px 0 var(--ink); }
+
+    .buy { max-width: 32rem; margin-top: 1.75rem; padding: 1.1rem; border: 1px solid var(--ink); background: var(--panel); }
+    .price-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
+    .price { display: inline-block; min-width: 7ch; padding: .3rem .8rem; background: var(--ink); color: var(--orange);
+      font: 700 clamp(1.7rem, 4vw, 2.4rem) var(--mono); letter-spacing: 0; }
+    .vat { font: .68rem var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--grey); }
+    .breakdown { margin-top: .9rem; font-size: .9rem; }
+    .breakdown td { padding: .3rem 0; }
+    .breakdown tr.total td { border-bottom: 0; border-top: 1px solid var(--ink); font-weight: 700; }
+    .buy form { margin-top: 1rem; }
+    label.terms { display: flex; align-items: flex-start; gap: .6rem; margin-top: 1rem; font: .85rem var(--sans);
+      text-transform: none; letter-spacing: 0; color: var(--ink); }
+    label.terms input { flex: none; width: auto; margin: .15rem 0 0; }
+    .buy button.primary { margin-top: 1rem; }
+    .fine { margin: .75rem 0 0; }
+    #status { margin: 0 0 1rem; padding: .6rem .8rem; border-left: 3px solid var(--orange); background: var(--panel); font-size: .9rem; }
+    #status:empty { display: none; }
+
+    .specs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    .spec { padding: 1rem 1rem 1.1rem 0; }
+    .spec + .spec { padding-left: 1rem; border-left: 1px solid var(--ink); }
+    .spec dt { padding: 0; }
+    .spec dd { margin-top: .35rem; font: 700 1.15rem var(--sans); letter-spacing: -.01em; }
+
+    footer { max-width: var(--page-width); margin: 2rem auto 0; padding: 1.25rem 1rem 2rem; font: .68rem var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--grey); }
+    footer a { margin-right: 1.25rem; }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: minmax(0, 1fr); }
+      .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .spec:nth-child(3) { padding-left: 0; border-left: 0; }
+      .spec:nth-child(n+3) { border-top: 1px solid var(--ink); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EuroCart<span>.</span></h1>
+    <a href="/">All products</a>
+  </header>
+
+  <div class="banner" role="note">Order it in one step: no account, no address, no shipping.</div>
+
+  <main>
+    <p id="status" role="status"></p>
+    <section class="hero">
+      <div class="cover-block">
+        <img class="cover" src="/img/book-cover.svg" width="600" height="900"
+             alt="Cover of the e-book De Ontdekking van de Hemel by Harry Mulisch">
+      </div>
+
+      <div>
+        <div class="kicker">E-book</div>
+        <h2 class="title">De Ontdekking van de Hemel</h2>
+        <p class="author">Harry Mulisch</p>
+
+        <div class="buy">
+          <p id="error"></p>
+          <div class="price-row">
+            <span class="price" id="price">…</span>
+            <span class="vat">Incl. VAT</span>
+          </div>
+          <table class="breakdown">
+            <tr><td>Price excl. VAT</td><td class="num" id="net"></td></tr>
+            <tr><td id="vat-label">VAT</td><td class="num" id="vat-amount"></td></tr>
+            <tr class="total"><td>Total incl. VAT</td><td class="num" id="gross"></td></tr>
+          </table>
+          <form id="buy-form">
+            <label>Email
+              <input name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </label>
+            <label class="terms">
+              <input type="checkbox" name="terms" required>
+              <span>I have read and accept the <a href="/terms.html" target="_blank" rel="noopener">terms and conditions</a>.</span>
+            </label>
+            <!-- Legal: the button that places the order must say that it comes with an obligation to pay. -->
+            <button type="submit" class="primary" id="buy" disabled>Order and pay with PayPal</button>
+          </form>
+          <p class="muted fine" id="country-note"></p>
+        </div>
+      </div>
+    </section>
+
+    <dl class="specs">
+      <div class="spec"><dt>Format</dt><dd>Digital edition</dd></div>
+      <div class="spec"><dt>Author</dt><dd>Harry Mulisch</dd></div>
+      <div class="spec"><dt>Shipping</dt><dd>None, it is digital</dd></div>
+      <div class="spec"><dt>Price incl. VAT</dt><dd id="spec-price">…</dd></div>
+    </dl>
+
+  </main>
+
+  <footer>
+    <a href="/terms.html">Terms and conditions</a>
+    <a href="/">Shop</a>
+  </footer>
+
+  <script>
+    // The book this page sells. Prices, VAT and the currency come from the backend for the visitor's storefront.
+    const PRODUCT_ID = 'EBK-002';
+    const LOCALES = { NL: 'nl-NL', DE: 'de-DE', FR: 'fr-FR', PL: 'pl-PL', CH: 'de-CH', GB: 'en-GB' };
+    const COUNTRY_NAMES = { NL: 'the Netherlands', DE: 'Germany', FR: 'France', PL: 'Poland', CH: 'Switzerland', GB: 'the United Kingdom' };
+    const DEFAULT_COUNTRY = 'PL';
+    const errorEl = document.getElementById('error');
+    const form = document.getElementById('buy-form');
+    const buyButton = document.getElementById('buy');
+    let storefront = DEFAULT_COUNTRY;
+
+    // The storefront follows the visitor's IP address. ?country=DE forces one (see the shop); it is remembered
+    // for the session under the same key as the shop uses.
+    const COUNTRY_KEY = 'eurocart.country';
+    const forcedCountry = (() => {
+      const asked = (new URLSearchParams(location.search).get('country') || '').toUpperCase();
+      const valid = Object.hasOwn(LOCALES, asked);
+      try {
+        if (valid) sessionStorage.setItem(COUNTRY_KEY, asked);
+        return sessionStorage.getItem(COUNTRY_KEY);
+      } catch {
+        return valid ? asked : null;
+      }
+    })();
+
+    // Back from the simulated PayPal page after cancelling: say so, and offer to pick the order up again.
+    const cancelledOrder = new URLSearchParams(location.search).get('cancelled');
+    if (cancelledOrder) {
+      const status = document.getElementById('status');
+      status.append(`Payment cancelled. Order ${cancelledOrder.slice(0, 8).toUpperCase()} is saved but not paid. `);
+      const link = document.createElement('a');
+      link.href = `/order.html?id=${encodeURIComponent(cancelledOrder)}`;
+      link.textContent = 'View the order';
+      status.append(link, '.');
+    }
+    if (location.search) history.replaceState(null, '', location.pathname);
+
+    async function api(path, options) {
+      errorEl.textContent = '';
+      const response = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...options });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        errorEl.textContent = (body && body.detail) || `${response.status} ${response.statusText}`;
+        throw new Error(errorEl.textContent);
+      }
+      return body;
+    }
+
+    const syncBuyButton = () => { buyButton.disabled = !form.elements.terms.checked || !form.dataset.ready; };
+    form.elements.terms.onchange = syncBuyButton;
+
+    async function showPrice() {
+      const country = forcedCountry || (await api('/api/geo/country')).country;
+      const storefronts = await api('/api/pricing/storefronts');
+      const found = storefronts.find(s => s.country === country) || storefronts.find(s => s.country === DEFAULT_COUNTRY);
+      storefront = found.country;
+      const prices = await api(`/api/pricing/products?country=${storefront}`);
+      const price = prices[PRODUCT_ID];
+      if (!price) throw new Error('This book is not available.');
+      const format = new Intl.NumberFormat(LOCALES[storefront], { style: 'currency', currency: found.currency });
+      document.getElementById('price').textContent = format.format(price.gross);
+      document.getElementById('spec-price').textContent = format.format(price.gross);
+      document.getElementById('net').textContent = format.format(price.net);
+      document.getElementById('vat-label').textContent = `VAT (${price.vatPercent}%)`;
+      document.getElementById('vat-amount').textContent = format.format(price.vat);
+      document.getElementById('gross').textContent = format.format(price.gross);
+      document.getElementById('country-note').textContent = `Shown for ${COUNTRY_NAMES[storefront]}, in ${found.currency}.`;
+      form.dataset.ready = 'true';
+      syncBuyButton();
+    }
+
+    // This page sells one product, so the cart is made to hold exactly that product before the order is placed.
+    form.onsubmit = async event => {
+      event.preventDefault();
+      buyButton.disabled = true;
+      try {
+        await api('/api/cart', { method: 'DELETE' });
+        await api('/api/cart/items', { method: 'POST', body: JSON.stringify({ productId: PRODUCT_ID, quantity: 1 }) });
+        const order = await api('/api/orders', { method: 'POST', body: JSON.stringify({
+          email: form.elements.email.value, shipping: null, storefront, termsAccepted: form.elements.terms.checked }) });
+        location.href = `/paypal-simulator.html?order=${encodeURIComponent(order.id)}`;
+      } catch {
+        syncBuyButton();
+      }
+    };
+
+    showPrice().catch(error => { errorEl.textContent = errorEl.textContent || error.message; });
+  </script>
+</body>
+</html>

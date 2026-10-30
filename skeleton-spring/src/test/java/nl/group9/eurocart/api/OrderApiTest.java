@@ -6,14 +6,14 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import nl.group9.eurocart.RecordingSalesNotifier;
+import nl.group9.eurocart.ShopTest;
 import nl.group9.eurocart.cart.CartService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -25,8 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@ShopTest
 class OrderApiTest {
 
 	private static final Path ORDERS_DIR = createOrdersDir();
@@ -41,6 +40,9 @@ class OrderApiTest {
 	@Autowired
 	private CartService cartService;
 
+	@Autowired
+	private RecordingSalesNotifier salesNotifier;
+
 	@DynamicPropertySource
 	static void ordersDirectory(DynamicPropertyRegistry registry) {
 		registry.add("eurocart.orders.dir", ORDERS_DIR::toString);
@@ -49,6 +51,7 @@ class OrderApiTest {
 	@BeforeEach
 	void emptyCart() {
 		cartService.clear();
+		salesNotifier.clear();
 	}
 
 	@Test
@@ -64,10 +67,11 @@ class OrderApiTest {
 				.andExpect(jsonPath("$.email").value("anna@example.pl"))
 				.andExpect(jsonPath("$.shipping.postalCode").value("00-950"))
 				.andExpect(jsonPath("$.pricing.currency").value("PLN"))
-				.andExpect(jsonPath("$.pricing.eurPerUnit").value(0.23))
+				.andExpect(jsonPath("$.pricing.eurPerUnit").value(0.33))
+				.andExpect(jsonPath("$.pricing.rateQuarter").value("2026-Q4"))
 				.andExpect(jsonPath("$.pricing.lines[0].price.vatPercent").value(23))
-				.andExpect(jsonPath("$.pricing.shipping.gross").value(26.74))
-				.andExpect(jsonPath("$.pricing.gross").value(4834.44))
+				.andExpect(jsonPath("$.pricing.shipping.gross").value(18.63))
+				.andExpect(jsonPath("$.pricing.gross").value(3369.45))
 				.andReturn().getResponse().getContentAsString();
 
 		String id = idOf(response);
@@ -76,7 +80,7 @@ class OrderApiTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.shipping.fullName").value("Anna Kowalska"))
 				.andExpect(jsonPath("$.shipping.phone").value("+48 600 100 200"))
-				.andExpect(jsonPath("$.pricing.gross").value(4834.44));
+				.andExpect(jsonPath("$.pricing.gross").value(3369.45));
 	}
 
 	@Test
@@ -100,7 +104,7 @@ class OrderApiTest {
 				.content("{\"termsAccepted\":true,\"email\":\"jane@example.co.uk\",\"storefront\":\"GB\"}"))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.pricing.currency").value("GBP"))
-				.andExpect(jsonPath("$.pricing.eurPerUnit").value(1.20))
+				.andExpect(jsonPath("$.pricing.eurPerUnit").value(1.25))
 				.andExpect(jsonPath("$.pricing.lines[0].price.vatPercent").value(0));
 	}
 
@@ -164,6 +168,61 @@ class OrderApiTest {
 		mockMvc.perform(get("/api/orders/" + id))
 				.andExpect(jsonPath("$.status").value("PAID"))
 				.andExpect(jsonPath("$.paidAt").exists());
+	}
+
+	@Test
+	void everyPaidOrderIsAnnouncedToTheSalesPersonOnce() throws Exception {
+		cartService.add("EBK-002", 1);
+		String id = idOf(mockMvc.perform(post("/api/orders")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"termsAccepted\":true,\"email\":\"anna@example.pl\",\"storefront\":\"PL\"}"))
+				.andReturn().getResponse().getContentAsString());
+		// placing the order is not a sale yet
+		assertThat(salesNotifier.notified()).isEmpty();
+
+		mockMvc.perform(post("/api/orders/" + id + "/payment")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"paypalOrderId\":\"SIM-1\"}"))
+				.andExpect(status().isOk());
+
+		assertThat(salesNotifier.notified()).hasSize(1);
+		assertThat(salesNotifier.notified().get(0).id()).isEqualTo(id);
+		// 47.69 PLN * 0.33 = 15.74 EUR
+		assertThat(salesNotifier.notified().get(0).pricing().grossEur()).isEqualTo(new java.math.BigDecimal("15.74"));
+
+		// the same payment again changes nothing and is not announced again
+		mockMvc.perform(post("/api/orders/" + id + "/payment")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"paypalOrderId\":\"SIM-1\"}"))
+				.andExpect(status().isOk());
+		assertThat(salesNotifier.notified()).hasSize(1);
+	}
+
+	@Test
+	void aRejectedPaymentIsNotAnnounced() throws Exception {
+		cartService.add("EBK-002", 1);
+		String id = idOf(mockMvc.perform(post("/api/orders")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"termsAccepted\":true,\"email\":\"anna@example.pl\"}"))
+				.andReturn().getResponse().getContentAsString());
+
+		mockMvc.perform(post("/api/orders/" + id + "/payment")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+				.andExpect(status().isBadRequest());
+
+		assertThat(salesNotifier.notified()).isEmpty();
+	}
+
+	@Test
+	void theEurAmountIsNotPartOfTheSavedOrder() throws Exception {
+		cartService.add("EBK-002", 1);
+
+		mockMvc.perform(post("/api/orders")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"termsAccepted\":true,\"email\":\"anna@example.pl\"}"))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.pricing.grossEur").doesNotExist());
 	}
 
 	@Test

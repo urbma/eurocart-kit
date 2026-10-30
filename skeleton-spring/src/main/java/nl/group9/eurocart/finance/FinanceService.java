@@ -1,7 +1,6 @@
 package nl.group9.eurocart.finance;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -43,7 +42,7 @@ public class FinanceService {
 		List<FinanceLine> lines = pricing.lines().stream().map(FinanceService::toFinanceLine).toList();
 		return new FinanceOrder(order.id(), order.createdAt(), order.paidAt(), order.status().name(), order.email(),
 				pricing.currency(), pricing.eurPerUnit(), pricing.net(), shippingNet, pricing.vat(), pricing.gross(),
-				toEur(pricing.gross(), pricing.eurPerUnit()), lines);
+				pricing.grossEur(), lines);
 	}
 
 	private static FinanceLine toFinanceLine(PricedLine line) {
@@ -66,9 +65,5 @@ public class FinanceService {
 		return orders.stream().map(amount).reduce(BigDecimal.ZERO.setScale(2), BigDecimal::add);
 	}
 
-	/** Null when the order has no stored exchange rate (orders saved by an older version), so the EUR value is unknown. */
-	private static BigDecimal toEur(BigDecimal amount, BigDecimal eurPerUnit) {
-		return eurPerUnit == null ? null : amount.multiply(eurPerUnit).setScale(2, RoundingMode.HALF_UP);
-	}
 
 }

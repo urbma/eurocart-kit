@@ -6,13 +6,12 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import nl.group9.eurocart.ShopTest;
 import nl.group9.eurocart.cart.CartService;
 
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -24,8 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@ShopTest
 class FinanceApiTest {
 
 	private static final Path ORDERS_DIR = createOrdersDir();
@@ -64,11 +62,11 @@ class FinanceApiTest {
 				.andExpect(jsonPath("$.orders[0].shippingNet").value(0.00))
 				.andExpect(jsonPath("$.orders[1].id").value(paidId))
 				.andExpect(jsonPath("$.orders[1].currency").value("PLN"))
-				.andExpect(jsonPath("$.orders[1].eurPerUnit").value(0.23))
-				.andExpect(jsonPath("$.orders[1].net").value(3930.44))
-				.andExpect(jsonPath("$.orders[1].shippingNet").value(21.74))
-				.andExpect(jsonPath("$.orders[1].vat").value(904.00))
-				.andExpect(jsonPath("$.orders[1].gross").value(4834.44))
+				.andExpect(jsonPath("$.orders[1].eurPerUnit").value(0.33))
+				.andExpect(jsonPath("$.orders[1].net").value(2739.39))
+				.andExpect(jsonPath("$.orders[1].shippingNet").value(15.15))
+				.andExpect(jsonPath("$.orders[1].vat").value(630.06))
+				.andExpect(jsonPath("$.orders[1].gross").value(3369.45))
 				.andExpect(jsonPath("$.orders[1].grossEur").value(1111.92))
 				.andExpect(jsonPath("$.orders[1].lines[0].productId").value("LAP-001"))
 				.andExpect(jsonPath("$.orders[1].lines[0].vatPercent").value(23))
@@ -76,7 +74,7 @@ class FinanceApiTest {
 				.andExpect(jsonPath("$.paidTotals.length()").value(1))
 				.andExpect(jsonPath("$.paidTotals[0].currency").value("PLN"))
 				.andExpect(jsonPath("$.paidTotals[0].orders").value(1))
-				.andExpect(jsonPath("$.paidTotals[0].gross").value(4834.44))
+				.andExpect(jsonPath("$.paidTotals[0].gross").value(3369.45))
 				.andExpect(jsonPath("$.paidTotals[0].grossEur").value(1111.92));
 	}
 

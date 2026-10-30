@@ -6,3 +6,6 @@ target/
 
 # Saved orders
 data/
+
+# Local configuration with secrets (e.g. the sales notification URL)
+config/

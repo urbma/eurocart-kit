@@ -1,21 +1,19 @@
 package nl.group9.eurocart.api;
 
+import nl.group9.eurocart.ShopTest;
 import nl.group9.eurocart.cart.CartService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@ShopTest
 class PricingApiTest {
 
 	@Autowired
@@ -35,9 +33,9 @@ class PricingApiTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(51))
 				.andExpect(jsonPath("$['LAP-001'].vatPercent").value(23))
-				.andExpect(jsonPath("$['LAP-001'].net").value(3908.70))
-				.andExpect(jsonPath("$['LAP-001'].vat").value(899.00))
-				.andExpect(jsonPath("$['LAP-001'].gross").value(4807.70));
+				.andExpect(jsonPath("$['LAP-001'].net").value(2724.24))
+				.andExpect(jsonPath("$['LAP-001'].vat").value(626.58))
+				.andExpect(jsonPath("$['LAP-001'].gross").value(3350.82));
 	}
 
 	@Test
@@ -49,12 +47,12 @@ class PricingApiTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.currency").value("PLN"))
 				.andExpect(jsonPath("$.lines.length()").value(2))
-				.andExpect(jsonPath("$.lines[1].price.gross").value(114.14))
-				.andExpect(jsonPath("$.shipping.net").value(21.74))
-				.andExpect(jsonPath("$.shipping.gross").value(26.74))
-				.andExpect(jsonPath("$.net").value(4039.14))
-				.andExpect(jsonPath("$.vat").value(909.44))
-				.andExpect(jsonPath("$.gross").value(4948.58));
+				.andExpect(jsonPath("$.lines[1].price.gross").value(79.55))
+				.andExpect(jsonPath("$.shipping.net").value(15.15))
+				.andExpect(jsonPath("$.shipping.gross").value(18.63))
+				.andExpect(jsonPath("$.net").value(2815.15))
+				.andExpect(jsonPath("$.vat").value(633.85))
+				.andExpect(jsonPath("$.gross").value(3449.00));
 	}
 
 	@Test
@@ -86,8 +84,8 @@ class PricingApiTest {
 	void pricesTheShippingFeeForTheRequestedStorefront() throws Exception {
 		mockMvc.perform(get("/api/pricing/shipping").param("country", "PL"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.net").value(21.74))
-				.andExpect(jsonPath("$.gross").value(26.74));
+				.andExpect(jsonPath("$.net").value(15.15))
+				.andExpect(jsonPath("$.gross").value(18.63));
 		mockMvc.perform(get("/api/pricing/shipping").param("country", "NL"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.vatPercent").value(21))

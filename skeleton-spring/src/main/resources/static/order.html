@@ -4,98 +4,179 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EuroCart – Your order</title>
+  <link rel="stylesheet" href="/te.css">
   <style>
-    /* Same look as the shop: colours of the Java logo, used as accents on a plain white page. */
-    :root {
-      --java-blue: #5382A1;
-      --java-blue-dark: #3E6482;
-      --java-blue-light: #EAF1F6;
-      --java-orange: #F89820;
-      --java-red: #E76F00;
-      --ink: #1F2D3A;
+    /* The confirmation page: a block of signal orange with a gigantic "Thank you.", confetti in the shop colours and the
+       order as a receipt with a display for the total. Every movement is switched off for people who prefer less motion. */
+    :root { --page-width: 1100px; }
+
+    @keyframes rise { from { opacity: 0; transform: translateY(2.5rem); } }
+    @keyframes draw { from { stroke-dashoffset: 190; } }
+    @keyframes pop { 0% { transform: translateY(-50%) scale(.2) rotate(-14deg); opacity: 0; } 70% { transform: translateY(-50%) scale(1.08) rotate(2deg); } }
+    @keyframes ticker { to { transform: translateX(-50%); } }
+
+    .hero { position: relative; overflow: hidden; background: var(--orange); border-bottom: 1px solid var(--ink); }
+    .hero.pending { background: var(--panel); }
+    .hero-inner { position: relative; max-width: var(--page-width); margin: 0 auto;
+      padding: clamp(2.5rem, 7vw, 5rem) 1rem clamp(4.5rem, 9vw, 7rem); }
+    .kicker { display: flex; align-items: center; gap: .6rem; font: 700 .75rem var(--mono); text-transform: uppercase; letter-spacing: .18em; }
+    .kicker::before { content: ""; width: .8em; height: .8em; background: var(--ink); }
+    h2.mega { margin: .6rem 0 1.7rem; font: 800 clamp(3.6rem, 12vw, 9.5rem)/.82 var(--sans); letter-spacing: -.065em; text-transform: none;
+      animation: rise .9s cubic-bezier(.2, .8, .2, 1) both; }
+    h2.mega::before { display: none; }
+    .lede { max-width: 36rem; margin: 0; font: 600 clamp(1rem, 2.3vw, 1.35rem)/1.35 var(--sans); animation: rise .9s .15s cubic-bezier(.2, .8, .2, 1) both; }
+
+    /* The check mark: a black block with an orange tick that draws itself. */
+    .check { position: absolute; top: 46%; right: max(1rem, calc((100vw - var(--page-width)) / 2 + 1rem)); width: clamp(6.5rem, 18vw, 14rem);
+      height: auto; box-shadow: 12px 12px 0 #fff; transform: translateY(-50%); animation: pop .8s .3s cubic-bezier(.2, .9, .3, 1.2) both; }
+    .check path { stroke-dasharray: 190; animation: draw .7s .85s ease-out both; }
+    .hero.pending .check { display: none; }
+
+    .ticker { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; white-space: nowrap; padding: .55rem 0; background: var(--ink); color: var(--orange);
+      font: 700 .75rem var(--mono); text-transform: uppercase; letter-spacing: .22em; }
+    .ticker-track { display: inline-block; animation: ticker 28s linear infinite; }
+    .hero.pending .ticker { color: #fff; }
+
+    main { padding-block: clamp(2rem, 5vw, 3.5rem) 4rem; }
+    .layout { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3.5rem); align-items: start; }
+    .layout.no-cover { grid-template-columns: minmax(0, 680px); justify-content: center; }
+    .cover-wrap { display: grid; place-items: center; padding: clamp(1.5rem, 4vw, 2.5rem); background: var(--orange); border: 1px solid var(--ink);
+      animation: rise .9s .3s cubic-bezier(.2, .8, .2, 1) both; }
+    .cover-wrap img { display: block; width: 100%; max-width: 250px; height: auto; aspect-ratio: 2 / 3; box-shadow: 10px 10px 0 var(--ink); }
+
+    .ticket { position: relative; background: #fff; border: 1px solid var(--ink); box-shadow: 12px 12px 0 var(--ink);
+      animation: rise .9s .4s cubic-bezier(.2, .8, .2, 1) both; }
+    .ticket-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .4rem 1.5rem; padding: 1rem 1.25rem; background: var(--ink); color: #fff; }
+    .ticket-head .label { font: 600 .66rem var(--mono); text-transform: uppercase; letter-spacing: .16em; color: #B5B5B0; }
+    #order-id { font: 700 .85rem var(--mono); color: var(--orange); overflow-wrap: anywhere; }
+    .ticket-body { padding: 1.25rem; }
+    .ticket h3:first-child { margin-top: 0; }
+    /* Perforation: a dashed tear line with a bite out of both sides, like a torn-off receipt. */
+    .perforation { position: relative; height: 0; margin: 1.5rem -1.25rem; border-top: 2px dashed var(--ink); }
+    .perforation::before, .perforation::after { content: ""; position: absolute; top: -13px; width: 24px; height: 24px; border: 1px solid var(--ink);
+      border-radius: 50%; background: var(--bg); }
+    .perforation::before { left: -13px; clip-path: inset(0 0 0 50%); }
+    .perforation::after { right: -13px; clip-path: inset(0 50% 0 0); }
+    #total { font-size: clamp(1.5rem, 5vw, 2.3rem); }
+    .address-label { padding: .9rem 1rem; border: 1px dashed var(--ink); background: var(--panel); font-size: 1.05rem; line-height: 1.5; }
+
+    .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; animation: rise .9s .55s cubic-bezier(.2, .8, .2, 1) both; }
+    .actions a.button { margin-top: 0; }
+    .actions button { padding: .8rem 1.4rem; font-size: .78rem; }
+
+    #confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      .check { top: 1.25rem; transform: none; width: 5.5rem; box-shadow: 6px 6px 0 #fff; animation: none; }
+      .check path { animation: none; }
+      h2.mega { margin-top: 5.5rem; }
     }
-    body { font-family: system-ui, sans-serif; margin: 0; background: #fff; color: var(--ink); line-height: 1.45; }
-    header, main { max-width: 640px; margin: 0 auto; padding: 0 1rem; }
-    /* The header background runs the full width of the window while its content stays in the column. */
-    header { padding-block: 1.25rem; background: var(--java-blue-light); box-shadow: 0 0 0 100vmax var(--java-blue-light);
-      clip-path: inset(0 -100vmax); border-bottom: 2px solid var(--java-blue); }
-    h1 { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--java-blue-dark); }
-    h1 span { color: var(--java-orange); }
-    main { padding-block: 2rem; }
-    h2 { margin: 0 0 .25rem; font-size: 1.4rem; font-weight: 600; }
-    h3 { margin: 2rem 0 .5rem; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--java-blue); }
-    table { width: 100%; border-collapse: collapse; }
-    td { padding: .45rem 0; border-bottom: 1px solid #F0F3F6; vertical-align: baseline; }
-    td + td { padding-left: .75rem; }
-    td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-    .summary td { border: 0; padding: .2rem 0; }
-    .summary .total td { padding-top: .6rem; border-top: 1px solid #E4EAF0; font-weight: 600; font-size: 1.1rem; }
-    dl { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1.5rem; margin: 0; }
-    dt { color: #6B7B88; }
-    dd { margin: 0; }
-    address { font-style: normal; }
-    .muted { color: #6B7B88; font-size: .8rem; }
-    .status { display: inline-block; border-radius: 999px; padding: .1rem .6rem; font-size: .75rem; font-weight: 600; letter-spacing: .04em; }
-    .PAID { background: #E3F2E7; color: #1E5B30; }
-    .PENDING { background: #FEF0DC; color: #8A4B00; }
-    a.button { display: inline-block; margin-top: 2rem; padding: .6rem 1.25rem; border-radius: 4px; background: var(--java-orange);
-      color: var(--ink); font-weight: 600; text-decoration: none; }
-    a.button:hover { background: var(--java-red); color: #fff; }
-    #error { color: #B00020; }
-    #error:empty { display: none; }
-    [hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    @media print {
+      header, .ticker, .check, #confetti, .actions { display: none !important; }
+      .hero, .hero.pending { background: #fff; }
+      .ticket { box-shadow: none; }
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>EuroCart<span>.</span></h1>
   </header>
+
+  <section class="hero" id="hero" hidden>
+    <div class="hero-inner">
+      <div class="kicker" id="kicker"></div>
+      <h2 class="mega" id="title"></h2>
+      <p class="lede" id="subtitle"></p>
+    </div>
+    <svg class="check" viewBox="0 0 200 200" aria-hidden="true">
+      <rect width="200" height="200" fill="#111"/>
+      <path d="M46 104 L88 146 L158 58" fill="none" stroke="#FF5B00" stroke-width="24" stroke-linecap="square"/>
+    </svg>
+    <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+  </section>
+
   <main>
     <p id="error"></p>
-    <div id="order" hidden>
-      <h2 id="title"></h2>
-      <p class="muted" id="subtitle"></p>
+    <div id="order" class="layout" hidden>
+      <aside class="cover-wrap" id="cover-wrap" hidden>
+        <img id="cover" alt="" width="600" height="900">
+      </aside>
 
-      <h3>Details</h3>
-      <dl>
-        <dt>Order</dt><dd id="order-id"></dd>
-        <dt>Status</dt><dd><span class="status" id="status"></span></dd>
-        <dt>Ordered</dt><dd id="created"></dd>
-        <dt id="paid-label">Paid</dt><dd id="paid"></dd>
-        <dt>Email</dt><dd id="email"></dd>
-      </dl>
+      <article>
+        <div class="ticket">
+          <div class="ticket-head">
+            <span class="label">Order</span>
+            <span id="order-id"></span>
+          </div>
+          <div class="ticket-body">
+            <h3>Details</h3>
+            <dl>
+              <dt>Status</dt><dd><span class="status" id="status"></span></dd>
+              <dt>Ordered</dt><dd id="created"></dd>
+              <dt id="paid-label">Paid</dt><dd id="paid"></dd>
+              <dt>Email</dt><dd id="email"></dd>
+            </dl>
 
-      <h3>Products</h3>
-      <table><tbody id="lines"></tbody></table>
-      <table class="summary">
-        <tr id="shipping-row"><td>Shipping</td><td class="num" id="shipping"></td></tr>
-        <tr class="total"><td>Total</td><td class="num" id="total"></td></tr>
-        <tr><td class="muted" colspan="2" id="vat-note"></td></tr>
-      </table>
+            <div class="perforation"></div>
 
-      <div id="delivery">
-        <h3>Delivery address</h3>
-        <address id="address"></address>
-      </div>
+            <h3>Products</h3>
+            <table><tbody id="lines"></tbody></table>
+            <table class="summary">
+              <tr id="shipping-row"><td>Shipping</td><td class="num" id="shipping"></td></tr>
+              <tr class="total"><td>Total</td><td class="num" id="total"></td></tr>
+              <tr><td class="muted" colspan="2" id="vat-note"></td></tr>
+            </table>
+
+            <div id="delivery">
+              <div class="perforation"></div>
+              <h3>Ship to</h3>
+              <address class="address-label" id="address"></address>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a class="button" href="/landing.html">Back to the start</a>
+          <a class="button" id="pay-link" href="#" hidden>Complete payment</a>
+          <button type="button" id="print">Print receipt</button>
+        </div>
+      </article>
     </div>
-    <a class="button" href="/">Back to the store</a>
   </main>
+
+  <canvas id="confetti" aria-hidden="true"></canvas>
 
   <script>
     // Shows a saved order: where the simulated PayPal page sends the customer after paying.
     const id = new URLSearchParams(location.search).get('id');
     const errorEl = document.getElementById('error');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const dateTime = iso => new Date(iso).toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' });
     const text = (elementId, value) => { document.getElementById(elementId).textContent = value; };
+
+    // Products that have their own artwork: it is shown next to the receipt.
+    const COVERS = { 'EBK-002': { src: '/img/book-cover.svg', alt: 'Cover of De Ontdekking van de Hemel by Harry Mulisch' } };
 
     function render(order) {
       const pricing = order.pricing;
       const money = new Intl.NumberFormat(undefined, { style: 'currency', currency: pricing.currency });
       const paid = order.status === 'PAID';
+      const number = order.id.slice(0, 8).toUpperCase();
 
-      text('title', paid ? 'Thank you for your order!' : 'Your order is not paid yet');
-      text('subtitle', paid ? `A confirmation is on its way to ${order.email}.`
+      document.title = paid ? `Thank you – order ${number} | EuroCart` : `Order ${number} | EuroCart`;
+      document.getElementById('hero').classList.toggle('pending', !paid);
+      text('kicker', paid ? 'Order confirmed' : 'Payment open');
+      text('title', paid ? 'Thank you.' : 'Not paid yet.');
+      text('subtitle', paid ? `Your order is paid. Order number ${number}, your receipt is below.`
           : 'The order is saved, but the payment has not been completed.');
+      const unit = paid ? 'Order confirmed ■ Thank you ■ ' : 'Waiting for payment ■ ';
+      const half = unit.repeat(10);
+      text('ticker', half + half);
+      document.getElementById('hero').hidden = false;
+
       text('order-id', order.id);
       const status = document.getElementById('status');
       status.textContent = order.status;
@@ -129,8 +210,77 @@
           address.phone
         ].filter(Boolean).join('\n');
       }
+
+      const artwork = pricing.lines.map(line => COVERS[line.product.id]).find(Boolean);
+      document.getElementById('cover-wrap').hidden = !artwork;
+      document.getElementById('order').classList.toggle('no-cover', !artwork);
+      if (artwork) Object.assign(document.getElementById('cover'), artwork);
+
+      const payLink = document.getElementById('pay-link');
+      payLink.hidden = paid;
+      payLink.href = `/paypal-simulator.html?order=${encodeURIComponent(order.id)}`;
       document.getElementById('order').hidden = false;
+
+      if (!reducedMotion) {
+        countUp(pricing.gross, money);
+        if (paid) confetti();
+      }
     }
+
+    // The total counts up from zero, like the display of a device waking up; it always ends on the exact amount.
+    function countUp(target, money) {
+      const element = document.getElementById('total');
+      const start = performance.now();
+      const duration = 1300;
+      const step = now => {
+        const progress = Math.min((now - start) / duration, 1);
+        element.textContent = money.format(progress === 1 ? target : target * (1 - Math.pow(1 - progress, 3)));
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    // Confetti in the colours of the shop, falling from the top for a few seconds.
+    function confetti() {
+      const canvas = document.getElementById('confetti');
+      const context = canvas.getContext('2d');
+      const resize = () => { canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; };
+      resize();
+      const colours = ['#FF5B00', '#111111', '#F4F1E8', '#0E1A38', '#FF5B00', '#FFFFFF'];
+      const pieces = Array.from({ length: 170 }, () => ({
+        x: Math.random() * innerWidth,
+        y: -20 - Math.random() * innerHeight * .7,
+        w: 6 + Math.random() * 9,
+        h: 10 + Math.random() * 14,
+        vx: (Math.random() - .5) * 3,
+        vy: 2.5 + Math.random() * 4,
+        angle: Math.random() * Math.PI,
+        spin: (Math.random() - .5) * .3,
+        colour: colours[Math.floor(Math.random() * colours.length)]
+      }));
+      const started = performance.now();
+      const frame = now => {
+        context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+        context.clearRect(0, 0, innerWidth, innerHeight);
+        let falling = false;
+        for (const p of pieces) {
+          p.x += p.vx + Math.sin(p.angle) * 1.2;
+          p.y += p.vy;
+          p.angle += p.spin;
+          if (p.y < innerHeight + 30) falling = true;
+          context.save();
+          context.translate(p.x, p.y);
+          context.rotate(p.angle);
+          context.fillStyle = p.colour;
+          context.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          context.restore();
+        }
+        if (falling && now - started < 6000) requestAnimationFrame(frame); else canvas.remove();
+      };
+      requestAnimationFrame(frame);
+    }
+
+    document.getElementById('print').onclick = () => window.print();
 
     async function load() {
       if (!id) {

@@ -1,0 +1,4 @@
+[
+  { "quarter": "2026-Q3", "eurPerUnit": { "GBP": 1.20, "CHF": 1.09, "PLN": 0.23 } },
+  { "quarter": "2026-Q4", "eurPerUnit": { "GBP": 1.25, "CHF": 1.04, "PLN": 0.33 } }
+]

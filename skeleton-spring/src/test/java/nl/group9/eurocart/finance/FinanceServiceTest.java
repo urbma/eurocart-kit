@@ -20,9 +20,9 @@ class FinanceServiceTest {
 
 	@Test
 	void orderWithoutStoredRateHasUnknownEurValueInsteadOfFailing() {
-		PricedCart legacy = new PricedCart("PLN", null, List.of(), null,
+		PricedCart legacy = new PricedCart("PLN", null, null, List.of(), null,
 				new BigDecimal("100.00"), new BigDecimal("23.00"), new BigDecimal("123.00"));
-		PricedCart current = new PricedCart("PLN", new BigDecimal("0.23"), List.of(), null,
+		PricedCart current = new PricedCart("PLN", new BigDecimal("0.23"), "2026-Q3", List.of(), null,
 				new BigDecimal("100.00"), new BigDecimal("23.00"), new BigDecimal("123.00"));
 		FinanceService finance = financeWith(
 				order("1", Instant.parse("2026-10-30T10:00:00Z"), legacy),
@@ -58,7 +58,7 @@ class FinanceServiceTest {
 				return List.of(saved);
 			}
 		};
-		return new FinanceService(new OrderService(null, null, repository, Clock.systemUTC()));
+		return new FinanceService(new OrderService(null, null, repository, Clock.systemUTC(), order -> { }));
 	}
 
 }

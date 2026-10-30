@@ -4,56 +4,40 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EuroCart – Finance</title>
+  <link rel="stylesheet" href="/te.css">
   <style>
-    /* Same look as the shop: colours of the Java logo, used as accents on a plain white page. */
-    :root {
-      --java-blue: #5382A1;
-      --java-blue-dark: #3E6482;
-      --java-blue-light: #EAF1F6;
-      --java-orange: #F89820;
-      --java-red: #E76F00;
-      --ink: #1F2D3A;
-    }
-    body { font-family: system-ui, sans-serif; margin: 0; background: #fff; color: var(--ink); line-height: 1.45; }
-    header, main { max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
-    /* The header background runs the full width of the window while its content stays in the column. */
-    header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem;
-      padding-block: 1.25rem; background: var(--java-blue-light); box-shadow: 0 0 0 100vmax var(--java-blue-light);
-      clip-path: inset(0 -100vmax); border-bottom: 2px solid var(--java-blue); }
-    h1 { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--java-blue-dark); }
-    h1 span { color: var(--java-orange); }
-    h1 small { font-size: 1rem; font-weight: 400; color: var(--java-blue-dark); margin-left: .5rem; }
-    header a { color: var(--java-blue-dark); font-weight: 600; text-decoration: none; }
-    header a:hover { text-decoration: underline; }
-    main { padding-block: 1.5rem; }
     section { margin-top: 2rem; overflow-x: auto; }
-    h2 { margin: 0 0 .5rem; font-size: 1rem; font-weight: 600; }
-    table { width: 100%; border-collapse: collapse; }
-    td, th { padding: .45rem .5rem; text-align: left; border-bottom: 1px solid #F0F3F6; white-space: nowrap; }
-    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-    th { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--java-blue);
-      border-bottom: 2px solid #E4EAF0; }
-    tr.detail td { background: #F7FAFC; white-space: normal; padding: .75rem 1rem; }
-    tr.detail table td, tr.detail table th { border-bottom: 1px solid #E4EAF0; }
-    button { cursor: pointer; font: inherit; font-weight: 600; border: 1px solid var(--java-blue); color: var(--java-blue-dark);
-      background: none; border-radius: 4px; padding: .1rem .6rem; }
-    button:hover { background: var(--java-blue); color: #fff; }
-    .muted { color: #6B7B88; font-size: .8rem; }
-    .status { border-radius: 999px; padding: .1rem .55rem; font-size: .7rem; font-weight: 600; letter-spacing: .04em; }
-    .PAID { background: #E3F2E7; color: #1E5B30; }
-    .PENDING { background: #FEF0DC; color: #8A4B00; }
-    #error { color: #B00020; }
-    #error:empty { display: none; }
+    td, th { padding: .45rem .4rem; white-space: nowrap; }
+    td.num { font-size: .82rem; }
+    tr.detail td { padding: .75rem 1rem; background: var(--panel); white-space: normal; }
+    tr.detail table td, tr.detail table th { border-bottom: 1px solid var(--line); }
+    #report-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1rem; margin-top: .5rem; }
+    #report-form label { margin: 0; }
+    #report-form input { width: auto; }
+    #report-form button { padding: .65rem 1.2rem; background: var(--orange); font-size: .78rem; }
+    #report-form button:hover { background: var(--ink); color: var(--orange); }
+    #report-status { margin: .75rem 0 0; padding-left: .6rem; border-left: 3px solid var(--orange); }
+    #report-status:empty { display: none; }
   </style>
 </head>
 <body>
   <header>
     <h1>EuroCart<span>.</span> <small>Finance</small></h1>
-    <a href="/">Back to the shop</a>
+    <a href="/landing.html">Back to the start</a>
   </header>
   <main>
   <p class="muted">Amounts are in the currency the customer was charged in. The EUR column converts the gross amount back with the exchange rate stored on the order.</p>
   <p id="error"></p>
+
+  <section>
+    <h2>Daily report to sales</h2>
+    <p class="muted">Sends the number of paid orders and the revenue (gross, in EUR) of one day to the sales person, just like the report that goes out every night at 00:05.</p>
+    <form id="report-form">
+      <label>Day <input type="date" id="report-date" required></label>
+      <button type="submit" id="report-button">Send report to sales</button>
+    </form>
+    <p id="report-status" role="status"></p>
+  </section>
 
   <section>
     <h2>Paid orders, totals per currency</h2>
@@ -179,6 +163,39 @@
       renderTotals(body.paidTotals);
       renderOrders(body.orders);
     }
+
+    // The daily report on request. The day is taken in the time zone of the shop, like the nightly report.
+    const reportDate = document.getElementById('report-date');
+    const reportButton = document.getElementById('report-button');
+    const reportStatus = document.getElementById('report-status');
+    const shopDay = offsetDays => {
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' });
+      const date = new Date(`${today}T12:00:00Z`);
+      date.setUTCDate(date.getUTCDate() + offsetDays);
+      return date.toISOString().slice(0, 10);
+    };
+    reportDate.max = shopDay(0);
+    reportDate.value = shopDay(-1);   // yesterday: what the nightly run sends
+
+    document.getElementById('report-form').onsubmit = async event => {
+      event.preventDefault();
+      const day = reportDate.value;
+      if (!confirm(`Send the daily report of ${day} to the sales person now?`)) return;
+      reportButton.disabled = true;
+      reportStatus.textContent = '';
+      errorEl.textContent = '';
+      try {
+        const response = await fetch(`/api/finance/daily-report?date=${encodeURIComponent(day)}`, { method: 'POST' });
+        const body = await response.json().catch(() => null);
+        if (!response.ok) {
+          errorEl.textContent = (body && body.detail) || `${response.status} ${response.statusText}`;
+          return;
+        }
+        reportStatus.textContent = `Sent the report of ${body.date}: ${body.totaalOrders} paid order${body.totaalOrders === 1 ? '' : 's'}, ${money(body.totaalOmzetInEuro, 'EUR')}.`;
+      } finally {
+        reportButton.disabled = false;
+      }
+    };
 
     load();
   </script>

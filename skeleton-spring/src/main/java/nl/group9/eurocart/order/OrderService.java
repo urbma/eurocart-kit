@@ -11,6 +11,7 @@ import nl.group9.eurocart.cart.CartService;
 import nl.group9.eurocart.cart.CartView;
 import nl.group9.eurocart.catalogue.Category;
 import nl.group9.eurocart.catalogue.Country;
+import nl.group9.eurocart.notification.SalesNotifier;
 import nl.group9.eurocart.pricing.PricedCart;
 import nl.group9.eurocart.pricing.PricingService;
 
@@ -30,11 +31,15 @@ public class OrderService {
 
 	private final Clock clock;
 
-	public OrderService(CartService cart, PricingService pricing, OrderRepository orders, Clock clock) {
+	private final SalesNotifier salesNotifier;
+
+	public OrderService(CartService cart, PricingService pricing, OrderRepository orders, Clock clock,
+			SalesNotifier salesNotifier) {
 		this.cart = cart;
 		this.pricing = pricing;
 		this.orders = orders;
 		this.clock = clock;
+		this.salesNotifier = salesNotifier;
 	}
 
 	/** Saves the current cart as a pending order, priced as it is right now. The cart itself is left alone. */
@@ -52,8 +57,8 @@ public class OrderService {
 		if (!Boolean.TRUE.equals(request.termsAccepted())) {
 			throw new IllegalArgumentException("You must accept the terms and conditions");
 		}
-		PricedCart priced = pricing.price(view, request.storefront() == null ? Country.PL : request.storefront());
 		Instant now = clock.instant();
+		PricedCart priced = pricing.price(view, request.storefront() == null ? Country.PL : request.storefront(), now);
 		Order order = new Order(UUID.randomUUID().toString(), now, OrderStatus.PENDING,
 				email, shipping, priced, null, null, now);
 		orders.save(order);
@@ -73,6 +78,7 @@ public class OrderService {
 		Order paid = order.paid(paypalOrderId, clock.instant());
 		orders.save(paid);
 		cart.clear();
+		salesNotifier.orderPaid(paid);
 		return paid;
 	}
 
