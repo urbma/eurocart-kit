@@ -57,9 +57,10 @@ class OrderApiTest {
 
 		String response = mockMvc.perform(post("/api/orders")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"email\":\"anna@example.pl\",\"shipping\":" + ADDRESS + "}"))
+				.content("{\"termsAccepted\":true,\"email\":\"anna@example.pl\",\"shipping\":" + ADDRESS + "}"))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.status").value("PENDING"))
+				.andExpect(jsonPath("$.termsAcceptedAt").exists())
 				.andExpect(jsonPath("$.email").value("anna@example.pl"))
 				.andExpect(jsonPath("$.shipping.postalCode").value("00-950"))
 				.andExpect(jsonPath("$.pricing.currency").value("PLN"))
@@ -84,7 +85,7 @@ class OrderApiTest {
 
 		mockMvc.perform(post("/api/orders")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"email\":\"anna@example.pl\"}"))
+				.content("{\"termsAccepted\":true,\"email\":\"anna@example.pl\"}"))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.shipping").doesNotExist())
 				.andExpect(jsonPath("$.pricing.shipping").doesNotExist());
@@ -96,7 +97,7 @@ class OrderApiTest {
 
 		mockMvc.perform(post("/api/orders")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"email\":\"jane@example.co.uk\",\"storefront\":\"GB\"}"))
+				.content("{\"termsAccepted\":true,\"email\":\"jane@example.co.uk\",\"storefront\":\"GB\"}"))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.pricing.currency").value("GBP"))
 				.andExpect(jsonPath("$.pricing.eurPerUnit").value(1.20))
@@ -129,6 +130,17 @@ class OrderApiTest {
 	}
 
 	@Test
+	void requiresAcceptanceOfTheTermsAndConditions() throws Exception {
+		cartService.add("LAP-001", 1);
+		cartService.add("EBK-001", 1);
+
+		placeExpecting("{\"email\":\"anna@example.pl\",\"shipping\":" + ADDRESS + "}",
+				"You must accept the terms and conditions");
+		placeExpecting("{\"termsAccepted\":false,\"email\":\"anna@example.pl\",\"shipping\":" + ADDRESS + "}",
+				"You must accept the terms and conditions");
+	}
+
+	@Test
 	void rejectsEmptyCart() throws Exception {
 		placeExpecting("{\"email\":\"anna@example.pl\"}", "Your cart is empty");
 	}
@@ -138,7 +150,7 @@ class OrderApiTest {
 		cartService.add("LAP-001", 1);
 		String id = idOf(mockMvc.perform(post("/api/orders")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"email\":\"anna@example.pl\",\"shipping\":" + ADDRESS + "}"))
+				.content("{\"termsAccepted\":true,\"email\":\"anna@example.pl\",\"shipping\":" + ADDRESS + "}"))
 				.andReturn().getResponse().getContentAsString());
 
 		mockMvc.perform(post("/api/orders/" + id + "/payment")

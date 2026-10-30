@@ -49,13 +49,13 @@ class FinanceApiTest {
 	void listsOrdersNewestFirstWithTotalsOfThePaidOnes() throws Exception {
 		cartService.clear();
 		cartService.add("LAP-001", 1);
-		String paidId = place("{\"email\":\"anna@example.pl\",\"shipping\":" + ADDRESS + "}");
+		String paidId = place("{\"termsAccepted\":true,\"email\":\"anna@example.pl\",\"shipping\":" + ADDRESS + "}");
 		mockMvc.perform(post("/api/orders/" + paidId + "/payment")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"paypalOrderId\":\"SIM-1\"}"))
 				.andExpect(status().isOk());
 		cartService.add("EBK-001", 1);
-		place("{\"email\":\"jan@example.pl\"}");
+		place("{\"termsAccepted\":true,\"email\":\"jan@example.pl\"}");
 
 		mockMvc.perform(get("/api/finance/orders"))
 				.andExpect(status().isOk())

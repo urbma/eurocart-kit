@@ -39,7 +39,7 @@ class FinanceServiceTest {
 	}
 
 	private static Order order(String id, Instant createdAt, PricedCart pricing) {
-		return new Order(id, createdAt, OrderStatus.PAID, "a@b.pl", null, pricing, "SIM-" + id, createdAt);
+		return new Order(id, createdAt, OrderStatus.PAID, "a@b.pl", null, pricing, "SIM-" + id, createdAt, createdAt);
 	}
 
 	private static FinanceService financeWith(Order... saved) {

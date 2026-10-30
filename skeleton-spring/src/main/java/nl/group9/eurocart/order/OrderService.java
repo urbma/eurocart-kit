@@ -1,6 +1,7 @@
 package nl.group9.eurocart.order;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -48,9 +49,13 @@ public class OrderService {
 		String email = validEmail(request.email());
 		boolean physical = view.lines().stream().anyMatch(line -> line.product().category() != Category.EBOOK);
 		ShippingAddress shipping = physical ? validShipping(request.shipping()) : null;
+		if (!Boolean.TRUE.equals(request.termsAccepted())) {
+			throw new IllegalArgumentException("You must accept the terms and conditions");
+		}
 		PricedCart priced = pricing.price(view, request.storefront() == null ? Country.PL : request.storefront());
-		Order order = new Order(UUID.randomUUID().toString(), clock.instant(), OrderStatus.PENDING,
-				email, shipping, priced, null, null);
+		Instant now = clock.instant();
+		Order order = new Order(UUID.randomUUID().toString(), now, OrderStatus.PENDING,
+				email, shipping, priced, null, null, now);
 		orders.save(order);
 		return order;
 	}

@@ -67,6 +67,9 @@
     legend { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--java-blue); padding: 0; }
     label { display: block; margin: .5rem 0 0; font-size: .8rem; color: #4A5A68; }
     input, select { width: 100%; box-sizing: border-box; padding: .4rem .5rem; border: 1px solid #CBD6E0; border-radius: 4px; font: inherit; }
+    label.terms { display: flex; align-items: flex-start; gap: .5rem; margin-top: 1rem; font-size: .85rem; color: var(--ink); }
+    label.terms input { width: auto; margin-top: .2rem; flex: none; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
     input:focus, select:focus { outline: 2px solid var(--java-orange); outline-offset: 0; border-color: transparent; }
     .row { display: grid; grid-template-columns: 2fr 1fr; gap: .5rem; }
     [hidden] { display: none !important; }
@@ -135,8 +138,12 @@
           <label>Phone (optional) <input name="phone" type="tel" autocomplete="tel"></label>
         </fieldset>
         <p class="muted" id="digital-note" hidden>Only digital products in your cart: no shipping address needed.</p>
+        <label class="terms">
+          <input type="checkbox" name="terms" required>
+          <span>I have read and accept the <a href="/terms.html" target="_blank" rel="noopener">terms and conditions</a>.</span>
+        </label>
         <!-- Legal: the button that places the order must say that it comes with an obligation to pay. -->
-        <button type="submit" class="primary">Order and pay with PayPal</button>
+        <button type="submit" class="primary" id="place-order" disabled>Order and pay with PayPal</button>
       </form>
       <p id="payment-status"></p>
     </section>
@@ -324,6 +331,11 @@
 
     const statusEl = document.getElementById('payment-status');
     const orderForm = document.getElementById('order-form');
+    const placeOrderButton = document.getElementById('place-order');
+
+    // Paying is only possible once the terms and conditions are accepted (the server checks this too).
+    const syncPlaceOrderButton = () => { placeOrderButton.disabled = !orderForm.elements.terms.checked; };
+    orderForm.elements.terms.onchange = syncPlaceOrderButton;
 
     // Step 1: show the contact / shipping form. Shipping is only needed when the cart has physical products.
     document.getElementById('checkout').onclick = async () => {
@@ -338,6 +350,7 @@
       document.getElementById('digital-note').hidden = physical;
       orderForm.dataset.physical = physical;
       orderForm.hidden = false;
+      syncPlaceOrderButton();
       orderForm.elements.email.focus();
     };
 
@@ -350,7 +363,8 @@
             .map(name => [name, field(name)]))
         : null;
       const order = await api('/api/orders', { method: 'POST',
-          body: JSON.stringify({ email: field('email'), shipping, storefront: storefront.country }) });
+          body: JSON.stringify({ email: field('email'), shipping, storefront: storefront.country,
+            termsAccepted: orderForm.elements.terms.checked }) });
       location.href = `/paypal-simulator.html?order=${encodeURIComponent(order.id)}`;
     };
 
